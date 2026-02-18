@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import Link from "next/link";
-import React from "react";
+import React, { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function Signup() {
   const router = useRouter();
@@ -14,7 +16,34 @@ export default function Signup() {
     password: "",
   });
 
-  const onSignup = async () => {};
+  const [buttonDisabled, setButtonDisabled] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const onSignup = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post("/api/users/signup", user);
+      if (response.status === 201) {
+        router.push("/login");
+      } else {
+        console.error("Signup failed:", response.data.message);
+      }
+    } catch (error: any) {
+      console.error("Error during signup:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (
+      user.username.length > 0 &&
+      user.email.length > 0 &&
+      user.password.length > 0
+    ) {
+      setButtonDisabled(false);
+    } else {
+      setButtonDisabled(true);
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-100 to-gray-200 px-4">
@@ -22,7 +51,9 @@ export default function Signup() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800">Create Account</h1>
+          <h1 className="text-3xl font-bold text-gray-800">
+            {loading ? "Loading..." : "Create Account"}
+          </h1>
           <p className="text-gray-500 mt-2">Signup to get started</p>
         </div>
 

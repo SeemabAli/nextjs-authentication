@@ -1,16 +1,29 @@
 import mongoose from "mongoose";
+
+const MONGO_URI = process.env.MONGO_URI as string;
+
+if (!MONGO_URI) {
+  throw new Error("Please define MONGO_URI in .env.local");
+}
+
+let isConnected = false;
+
 export async function connect() {
   try {
-    mongoose.connect(process.env.MONGO_URI!);
-    const connection = mongoose.connection;
-    connection.on("connected", () => {
+    if (isConnected) {
+      console.log("MongoDB already connected");
+      return;
+    }
+
+    const db = await mongoose.connect(MONGO_URI);
+
+    isConnected = db.connections[0].readyState === 1;
+
+    if (isConnected) {
       console.log("MongoDB connected successfully");
-    });
-    connection.on("error", (err) => {
-      console.error("MongoDB connection error:", err);
-      process.exit();
-    });
+    }
   } catch (error) {
-    console.error("Error connecting to MongoDB", error);
+    console.error("MongoDB connection error:", error);
+    throw error;
   }
 }
